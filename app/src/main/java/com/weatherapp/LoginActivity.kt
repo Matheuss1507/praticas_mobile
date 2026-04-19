@@ -1,6 +1,8 @@
 package com.weatherapp
 
 import android.app.Activity
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -89,6 +90,11 @@ fun LoginPage(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceEvenly) {
             Button( onClick = {
                 Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
+                activity.startActivity(
+                    Intent(activity, MainActivity::class.java).setFlags(
+                        FLAG_ACTIVITY_SINGLE_TOP
+                    )
+                )
             } ) {
                 Text("Login")
             }
