@@ -1,5 +1,7 @@
 package com.weatherapp
 
+import com.weatherapp.ui.HomePage
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,31 +40,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomePage(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
-
-    Column(
-        modifier = modifier.padding(24.dp).fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = CenterHorizontally
-    ) {
-        val modifier = Modifier.fillMaxWidth(fraction = 0.9f)
-
-        Text(
-            text = "Bem-vindo",
-            fontSize = 24.sp
-        )
-
-        Spacer(modifier = Modifier.size(12.dp))
-
-        Button( onClick = {
-            activity?.finish()
-        }
-        ) {
-            Text("Sair")
-        }
-    }
-}
