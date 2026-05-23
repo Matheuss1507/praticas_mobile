@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.weatherapp" />
+                  <option name="mobileSdkAppId" value="1:798456265478:android:bcae156e0aaa66b040fc87" />
+                  <option name="projectId" value="weatherapp-496517" />
+                  <option name="projectNumber" value="798456265478" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
