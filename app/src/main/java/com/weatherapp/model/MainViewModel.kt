@@ -12,9 +12,15 @@ import com.weatherapp.db.fb.FBCity
 import com.weatherapp.db.fb.FBDatabase
 import com.weatherapp.db.fb.FBUser
 import com.weatherapp.db.fb.toFBCity
+import com.weatherapp.ui.nav.Route
 
 class MainViewModel (private val db: FBDatabase, private val service : WeatherService):
     ViewModel(), FBDatabase.Listener {
+
+    private var _page = mutableStateOf<Route>(Route.Home)
+    var page: Route
+        get() = _page.value
+        set(tmp) { _page.value = tmp }
 
     private val _cities = mutableStateMapOf<String, City>()
     val cities : List<City>
