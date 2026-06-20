@@ -37,6 +37,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.weatherapp.api.WeatherService
 import com.weatherapp.db.fb.FBDatabase
 import com.weatherapp.model.MainViewModelFactory
 
@@ -53,14 +54,15 @@ class MainActivity : ComponentActivity() {
             val currentRoute = navController.currentBackStackEntryAsState()
             val showButton = currentRoute.value?.destination?.hasRoute(Route.List::class) == true
             val fbDB = remember { FBDatabase() }
+            val weatherService = remember { WeatherService() }
             val viewModel : MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB)
+                factory = MainViewModelFactory(fbDB, weatherService)
             )
             WeatherAppTheme {
                 if (showDialog) CityDialog(
                     onDismiss = { showDialog = false },
                     onConfirm = { city ->
-                        if (city.isNotBlank()) viewModel.add(city)
+                        if (city.isNotBlank()) viewModel.addCity(city)
                         showDialog = false
                     })
                 Scaffold(

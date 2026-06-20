@@ -1,24 +1,14 @@
 package com.weatherapp.ui
 
 import android.content.pm.PackageManager
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -44,7 +34,7 @@ fun MapPage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
 
 
     GoogleMap (modifier = Modifier.fillMaxSize(), onMapClick = {
-        viewModel.add("Cidade@${it.latitude}:${it.longitude}", location = it) },
+        viewModel.addCity("Cidade@${it.latitude}:${it.longitude}", location = it) },
         cameraPositionState = camPosState, properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
         uiSettings = MapUiSettings(myLocationButtonEnabled = true)
     ) {
@@ -54,26 +44,5 @@ fun MapPage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
                     title = it.name, snippet = "${it.location}")
             }
         }
-        Marker(
-            state = recife,
-            title = "Recife",
-            snippet = "Marcador em Recife",
-            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-        )
-        Marker(
-            state = caruaru,
-            title = "Caruaru",
-            snippet = "Marcador em Caruaru",
-            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-        )
-        Marker(
-            state = joaopessoa,
-            title = "João Pessoa",
-            snippet = "Marcador em João Pessoa",
-            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
-        )
-
-
-
     }
 }
