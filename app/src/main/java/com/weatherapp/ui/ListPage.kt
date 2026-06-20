@@ -31,6 +31,8 @@ import com.weatherapp.model.City
 import androidx.compose.foundation.lazy.items
 import com.weatherapp.MainActivity
 import com.weatherapp.model.MainViewModel
+import com.weatherapp.model.Weather
+
 @Composable
 fun ListPage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
     val cityList = viewModel.cities
@@ -40,8 +42,8 @@ fun ListPage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        items(cityList, key = { it.name }) { city ->
-            CityItem(city = city, onClose = {
+        items(items = cityList, key = { it.name } ) { city ->
+            CityItem(city = city, weather = viewModel.weather(city.name), onClose = {
                 viewModel.remove(city)
                 Toast.makeText(activity, "Cidade excluída", Toast.LENGTH_LONG).show()
             }, onClick = {
@@ -53,10 +55,12 @@ fun ListPage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
 @Composable
 fun CityItem(
     city: City,
+    weather: Weather,
     onClick: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val desc = if (weather == Weather.LOADING) "Carregando clima..." else weather.desc
     Row(
         modifier = modifier.fillMaxWidth().padding(8.dp).clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically
@@ -71,7 +75,7 @@ fun CityItem(
                 text = city.name,
                 fontSize = 24.sp)
             Text(modifier = Modifier,
-                text = city.weather?:"Carregando clima...",
+                text = desc,
                 fontSize = 16.sp)
         }
         IconButton(onClick = onClose) {
