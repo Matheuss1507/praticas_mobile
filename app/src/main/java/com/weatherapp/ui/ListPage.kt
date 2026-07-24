@@ -26,7 +26,8 @@ import com.weatherapp.R
 import com.weatherapp.model.MainViewModel
 import com.weatherapp.model.Weather
 import com.weatherapp.ui.nav.Route
-
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
 @Composable
 fun ListPage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
     val cityList = viewModel.cities
@@ -57,11 +58,21 @@ fun CityItem(
     modifier: Modifier = Modifier
 ) {
     val desc = if (weather == Weather.LOADING) "Carregando clima..." else weather.desc
+
+    val icon = if (city.isMonitored) {
+        Icons.Filled.Notifications
+    } else {
+        Icons.Outlined.Notifications
+    }
+
     Row(
-        modifier = modifier.fillMaxWidth().padding(8.dp).clickable { onClick() },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage( // Substitui o Icon(...)
+        AsyncImage(
             model = weather.imgUrl,
             modifier = modifier.size(75.dp),
             error = painterResource(id = R.drawable.loading),
@@ -69,12 +80,27 @@ fun CityItem(
         )
         Spacer(modifier = Modifier.size(12.dp))
         Column(modifier = modifier.weight(1f)) {
-            Text(modifier = Modifier,
-                text = city.name,
-                fontSize = 24.sp)
-            Text(modifier = Modifier,
+            // Row agrupando o Nome da Cidade + Ícone Estático de Notificação
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier,
+                    text = city.name,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "Monitorada?",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Text(
+                modifier = Modifier,
                 text = desc,
-                fontSize = 16.sp)
+                fontSize = 16.sp
+            )
         }
         IconButton(onClick = onClose) {
             Icon(Icons.Filled.Close, contentDescription = "Close")

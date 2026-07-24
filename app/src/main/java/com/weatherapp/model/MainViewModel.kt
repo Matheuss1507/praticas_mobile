@@ -111,6 +111,10 @@ class MainViewModel (private val db: FBDatabase, private val service : WeatherSe
         }
     }
 
+    fun update(city: City) {
+        db.update(city.toFBCity())
+    }
+
 }
 
 class MainViewModelFactory(private val db : FBDatabase, private val service : WeatherService) :
