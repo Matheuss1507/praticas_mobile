@@ -14,10 +14,12 @@ class FBDatabase {
         fun onCityUpdated(city: FBCity)
         fun onCityRemoved(city: FBCity)
     }
+
     private val auth = Firebase.auth
     private val db = Firebase.firestore
     private var citiesListReg: ListenerRegistration? = null
-    private var listener : Listener? = null
+    private var listener: Listener? = null
+
     init {
         auth.addAuthStateListener { auth ->
             if (auth.currentUser == null) {
@@ -36,12 +38,10 @@ class FBDatabase {
                     if (ex != null) return@addSnapshotListener
                     snapshots?.documentChanges?.forEach { change ->
                         val fbCity = change.document.toObject(FBCity::class.java)
-                        if (change.type == DocumentChange.Type.ADDED) {
-                            listener?.onCityAdded(fbCity)
-                        } else if (change.type == DocumentChange.Type.MODIFIED) {
-                            listener?.onCityUpdated(fbCity)
-                        } else if (change.type == DocumentChange.Type.REMOVED) {
-                            listener?.onCityRemoved(fbCity)
+                        when (change.type) {
+                            DocumentChange.Type.ADDED -> listener?.onCityAdded(fbCity)
+                            DocumentChange.Type.MODIFIED -> listener?.onCityUpdated(fbCity)
+                            DocumentChange.Type.REMOVED -> listener?.onCityRemoved(fbCity)
                         }
                     }
                 }
@@ -53,42 +53,37 @@ class FBDatabase {
     }
 
     fun register(user: FBUser) {
-        if (auth.currentUser == null)
-            throw RuntimeException("User not logged in!")
-        val uid = auth.currentUser!!.uid
-        db.collection("users").document(uid + "").set(user);
+        val userAuth = auth.currentUser ?: throw RuntimeException("User not logged in!")
+        db.collection("users").document(userAuth.uid).set(user)
     }
 
     fun add(city: FBCity) {
-        if (auth.currentUser == null)
-            throw RuntimeException("User not logged in!")
-        if (city.name == null || city.name!!.isEmpty())
-            throw RuntimeException("City with null or empty name!")
-        val uid = auth.currentUser!!.uid
-        db.collection("users").document(uid).collection("cities")
-            .document(city.name!!).set(city)
+        val userAuth = auth.currentUser ?: throw RuntimeException("User not logged in!")
+        if (city.name.isNullOrEmpty()) throw RuntimeException("City with null or empty name!")
+
+        db.collection("users").document(userAuth.uid)
+            .collection("cities").document(city.name!!).set(city)
     }
 
     fun remove(city: FBCity) {
-        if (auth.currentUser == null)
-            throw RuntimeException("User not logged in!")
-        if (city.name == null || city.name!!.isEmpty())
-            throw RuntimeException("City with null or empty name!")
-        val uid = auth.currentUser!!.uid
-        db.collection("users").document(uid).collection("cities")
-            .document(city.name!!).delete()
+        val userAuth = auth.currentUser ?: throw RuntimeException("User not logged in!")
+        if (city.name.isNullOrEmpty()) throw RuntimeException("City with null or empty name!")
+
+        db.collection("users").document(userAuth.uid)
+            .collection("cities").document(city.name!!).delete()
     }
 
     fun update(city: FBCity) {
-        if (auth.currentUser == null) throw RuntimeException("Not logged in!")
-        val uid = auth.currentUser!!.uid
-        val changes = mapOf("lat" to city.lat,"lng" to city.lng,
-            "monitored" to city.monitored )
-        db.collection("users").document(uid)
+        val userAuth = auth.currentUser ?: throw RuntimeException("Not logged in!")
+        if (city.name.isNullOrEmpty()) throw RuntimeException("City with null or empty name!")
+
+        val changes = mapOf(
+            "lat" to city.lat,
+            "lng" to city.lng,
+            "isMonitored" to city.isMonitored
+        )
+
+        db.collection("users").document(userAuth.uid)
             .collection("cities").document(city.name!!).update(changes)
     }
-
-
 }
-
-
