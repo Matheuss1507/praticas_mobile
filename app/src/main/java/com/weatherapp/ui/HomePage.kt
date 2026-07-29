@@ -6,34 +6,46 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.weatherapp.R
 import com.weatherapp.model.Forecast
 import com.weatherapp.model.MainViewModel
+import com.weatherapp.model.Weather
 import java.text.DecimalFormat
 
 @Composable
 fun HomePage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
+    val citiesMap by viewModel.cities.collectAsStateWithLifecycle()
+    val weatherMap by viewModel.weather.collectAsStateWithLifecycle(emptyMap())
+    val forecastMap by viewModel.forecast.collectAsStateWithLifecycle(emptyMap())
+
+    val selectedCityName = viewModel.city
+
+    LaunchedEffect(selectedCityName) {
+        selectedCityName?.let { name ->
+            viewModel.loadWeather(name)
+            viewModel.loadForecast(name)
+        }
+    }
+
     Column {
-        if (viewModel.city == null) {
+        if (selectedCityName == null) {
             Column(
                 modifier = modifier
                     .fillMaxSize()
@@ -50,60 +62,57 @@ fun HomePage(modifier: Modifier = Modifier, viewModel: MainViewModel) {
                 )
             }
         } else {
-            val city = viewModel.cities.find { it.name == viewModel.city }
+            val city = citiesMap[selectedCityName]
+            val weather = weatherMap[selectedCityName] ?: Weather.LOADING
 
             Row {
                 AsyncImage(
-                    model = viewModel.weather(viewModel.city!!).imgUrl,
+                    model = weather.imgUrl,
                     modifier = modifier.size(140.dp),
                     error = painterResource(id = R.drawable.loading),
                     contentDescription = "Imagem"
                 )
                 Column {
                     Spacer(modifier = modifier.size(12.dp))
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = viewModel.city ?: "Selecione uma cidade...",
+                            text = selectedCityName,
                             fontSize = 28.sp
                         )
-
                         if (city != null) {
                             Spacer(modifier = Modifier.width(8.dp))
-
                             val icon = if (city.isMonitored) {
                                 Icons.Filled.Notifications
                             } else {
                                 Icons.Outlined.Notifications
                             }
-
                             Icon(
-                                imageVector = icon, contentDescription = "Monitorada?",
-                                modifier = Modifier.size(32.dp).clickable {
+                                imageVector = icon,
+                                contentDescription = "Monitorada?",
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clickable {
                                         viewModel.update(city = city.copy(isMonitored = !city.isMonitored))
                                     }
                             )
                         }
                     }
-
-                    viewModel.city?.let { name ->
-                        val weather = viewModel.weather(name)
-                        Spacer(modifier = modifier.size(12.dp))
-                        Text(
-                            text = weather.desc ?: "...",
-                            fontSize = 22.sp
-                        )
-                        Spacer(modifier = modifier.size(12.dp))
-                        Text(
-                            text = "Temp: " + weather.temp + "℃",
-                            fontSize = 22.sp
-                        )
-                    }
+                    Spacer(modifier = modifier.size(12.dp))
+                    Text(
+                        text = weather.desc,
+                        fontSize = 22.sp
+                    )
+                    Spacer(modifier = modifier.size(12.dp))
+                    Text(
+                        text = "Temp: ${weather.temp} ℃",
+                        fontSize = 22.sp
+                    )
                 }
             }
-            viewModel.forecast(viewModel.city!!)?.let { forecasts ->
+
+            forecastMap[selectedCityName]?.let { forecasts ->
                 LazyColumn {
                     items(items = forecasts) { forecast ->
                         ForecastItem(forecast, onClick = { })
@@ -124,8 +133,10 @@ fun ForecastItem(
     val tempMin = format.format(forecast.tempMin)
     val tempMax = format.format(forecast.tempMax)
     Row(
-        modifier = modifier.fillMaxWidth().padding(12.dp)
-            .clickable( onClick = { onClick(forecast) }),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+            .clickable(onClick = { onClick(forecast) }),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -140,11 +151,10 @@ fun ForecastItem(
             Row {
                 Text(modifier = modifier, text = forecast.date, fontSize = 20.sp)
                 Spacer(modifier = modifier.size(12.dp))
-                Text(modifier = modifier, text = "Min: $tempMin℃", fontSize = 16.sp)
+                Text(modifier = modifier, text = "Min: $tempMin ℃", fontSize = 16.sp)
                 Spacer(modifier = modifier.size(12.dp))
-                Text(modifier = modifier, text = "Max: $tempMax℃", fontSize = 16.sp)
+                Text(modifier = modifier, text = "Max: $tempMax ℃", fontSize = 16.sp)
             }
         }
     }
 }
-
