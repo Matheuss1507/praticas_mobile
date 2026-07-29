@@ -2,55 +2,16 @@ package com.weatherapp.db.fb
 
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.snapshots
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 
 class FBDatabase {
-    interface Listener {
-        fun onUserLoaded(user: FBUser)
-        fun onUserSignOut()
-        fun onCityAdded(city: FBCity)
-        fun onCityUpdated(city: FBCity)
-        fun onCityRemoved(city: FBCity)
-    }
-
     private val auth = Firebase.auth
     private val db = Firebase.firestore
-    private var citiesListReg: ListenerRegistration? = null
-    private var listener: Listener? = null
-
-    init {
-        auth.addAuthStateListener { auth ->
-            if (auth.currentUser == null) {
-                citiesListReg?.remove()
-                listener?.onUserSignOut()
-                return@addAuthStateListener
-            }
-            val refCurrUser = db.collection("users").document(auth.currentUser!!.uid)
-            refCurrUser.get().addOnSuccessListener {
-                it.toObject(FBUser::class.java)?.let { user ->
-                    listener?.onUserLoaded(user)
-                }
-            }
-            citiesListReg = refCurrUser.collection("cities")
-                .addSnapshotListener { snapshots, ex ->
-                    if (ex != null) return@addSnapshotListener
-                    snapshots?.documentChanges?.forEach { change ->
-                        val fbCity = change.document.toObject(FBCity::class.java)
-                        when (change.type) {
-                            DocumentChange.Type.ADDED -> listener?.onCityAdded(fbCity)
-                            DocumentChange.Type.MODIFIED -> listener?.onCityUpdated(fbCity)
-                            DocumentChange.Type.REMOVED -> listener?.onCityRemoved(fbCity)
-                        }
-                    }
-                }
-        }
-    }
-
-    fun setListener(listener: FBDatabase.Listener? = null) {
-        this.listener = listener
-    }
 
     fun register(user: FBUser) {
         val userAuth = auth.currentUser ?: throw RuntimeException("User not logged in!")
@@ -72,9 +33,11 @@ class FBDatabase {
         db.collection("users").document(userAuth.uid)
             .collection("cities").document(city.name!!).delete()
     }
+
     fun update(city: FBCity) {
         val userAuth = auth.currentUser ?: throw RuntimeException("Not logged in!")
         if (city.name.isNullOrEmpty()) throw RuntimeException("City with null or empty name!")
+
         val changes = mapOf(
             "lat" to city.lat,
             "lng" to city.lng,
@@ -83,4 +46,23 @@ class FBDatabase {
         db.collection("users").document(userAuth.uid)
             .collection("cities").document(city.name!!).update(changes)
     }
+
+    val user: Flow<FBUser>
+        get() {
+            val currentUser = auth.currentUser ?: return emptyFlow()
+            return db.collection("users")
+                .document(currentUser.uid)
+                .snapshots()
+                .mapNotNull { it.toObject(FBUser::class.java) }
+        }
+
+    val cities: Flow<List<FBCity>>
+        get() {
+            val currentUser = auth.currentUser ?: return emptyFlow()
+            return db.collection("users")
+                .document(currentUser.uid)
+                .collection("cities")
+                .snapshots()
+                .map { snapshot -> snapshot.toObjects(FBCity::class.java) }
+        }
 }
