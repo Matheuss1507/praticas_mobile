@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.util.Consumer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -35,9 +36,11 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.weatherapp.api.WeatherService
 import com.weatherapp.db.fb.FBDatabase
+import com.weatherapp.db.local.LocalDatabase
 import com.weatherapp.model.MainViewModel
 import com.weatherapp.model.MainViewModelFactory
 import com.weatherapp.monitor.ForecastMonitor
+import com.weatherapp.repo.Repository
 import com.weatherapp.ui.CityDialog
 import com.weatherapp.ui.nav.BottomNavBar
 import com.weatherapp.ui.nav.BottomNavItem
@@ -60,12 +63,18 @@ class MainActivity : ComponentActivity() {
             val currentRoute = navController.currentBackStackEntryAsState()
             val showButton = currentRoute.value?.destination?.hasRoute(Route.List::class) == true
 
+            // Instanciação das bases de dados e repositório
+            val context = LocalContext.current
+            val userId = Firebase.auth.currentUser?.uid ?: "user_db"
             val fbDB = remember { FBDatabase() }
+            val localDB = remember { LocalDatabase(context, userId) }
+            val repository = remember { Repository(fbDB, localDB) }
+
             val weatherService = remember { WeatherService(this) }
             val forecastMonitor = remember { ForecastMonitor(this) }
 
             val viewModel : MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB, weatherService, forecastMonitor)
+                factory = MainViewModelFactory(repository, weatherService, forecastMonitor)
             )
 
             DisposableEffect(Unit) {
